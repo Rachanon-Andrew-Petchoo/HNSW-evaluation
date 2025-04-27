@@ -85,16 +85,18 @@ def experiment(train_data, test_data, neighbors, params_grid):
                     })
     return results
 
-def plot_results(result_filepath, param_x, param_y, metric):
+def plot_results(result_filepath, param_x, param_y, metric, save_to=None):
     results = pd.read_csv(result_filepath)
 
     plt.figure(figsize=(8,6))
-    for result in results:
-        plt.scatter(result[param_x], result[param_y], c=result[metric], cmap='viridis')
-    plt.colorbar(label=metric)
+    scatter = plt.scatter(results[param_x], results[param_y], c=results[metric], cmap='viridis', s=50, edgecolors='k', alpha=0.7)
+    plt.colorbar(scatter, label=metric)
     plt.xlabel(param_x)
     plt.ylabel(param_y)
-    plt.title(f"{metric} vs {param_x} and {param_y}")
+    plt.title(f"{metric} for {param_x} vs. {param_y}")
+    if save_to:
+        plt.savefig(save_to, bbox_inches='tight')
+        print(f"[Plot] Saved to {save_to}")
     plt.show()
 
 def run_full_evaluation():
