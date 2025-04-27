@@ -101,7 +101,7 @@ def plot_results(result_filepath, param_x, param_y, metric, save_to=None):
 
 def run_full_evaluation():
     # Load dataset
-    # TODO: Choose more dataset
+    # TODO: Choose more dataset that have what Prof. suggests in the proposal feedback (size of dataset, dimensions)
     urls = {
         "sift-128": "http://ann-benchmarks.com/sift-128-euclidean.hdf5",
     }
@@ -133,7 +133,7 @@ def run_full_evaluation():
 
     # Load result + Plot some example trends
     # TODO: Plot more graphs (Might want to concat results between dataset before plotting)
-    # TODO: Customize this function (potentially, showing metrics of adjusting more two parameters - like using 3D graph, or adding more dimensiosn using point size/color/etc.) + 
+    # TODO: Customize this function (potentially, showing metrics of adjusting more two parameters - like using 3D graph, or adding more dimensiosn using point size/color/etc.)
     plot_results("results/sift-128_results.csv", "M", "efSearch", "recall")
     
 if __name__ == "__main__":
