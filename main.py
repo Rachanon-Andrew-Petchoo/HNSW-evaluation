@@ -104,6 +104,10 @@ def run_full_evaluation():
     # TODO: Choose more dataset that have what Prof. suggests in the proposal feedback (size of dataset, dimensions)
     urls = {
         "sift-128": "http://ann-benchmarks.com/sift-128-euclidean.hdf5",
+        "mnist": "http://ann-benchmarks.com/mnist-784-euclidean.hdf5",
+        "last.fm": "http://ann-benchmarks.com/lastfm-64-dot.hdf5",
+        "nytimes": "http://ann-benchmarks.com/nytimes-256-angular.hdf5",
+        "coco-i2i": "https://github.com/fabiocarrara/str-encoders/releases/download/v0.1.3/coco-i2i-512-angular.hdf5"
     }
     download_data(urls)
 
@@ -111,8 +115,8 @@ def run_full_evaluation():
     # TODO: Change these parameters for our experiment - not sure what are the values we should test
     # TODO: Figure out how to add M0 to our experiment - from my research, FAISS does not allow us to config this parameter (not sure if there's any hack)
     params_grid = {
-        "M": [8, 16, 32],
-        "efConstruction": [100, 200, 400],
+        "M": [4, 8, 16, 24, 32],
+        "efConstruction": [50, 100, 200],
         "efSearch": [10, 50, 100, 200],
         # "M0": [None, 2, 4]
     }
@@ -120,8 +124,19 @@ def run_full_evaluation():
     for dataset_name in urls:
         print(f'[Experiment] Dataset: {dataset_name}')
         train, test, neighbors = load_hdf5(f'data/{dataset_name}.hdf5')
+        
+        # Get metadata of each dataset
+        train_size, dimension = train.shape
+        test_size = test.shape[0]
 
+        # Run experiment
         results = experiment(train, test, neighbors, params_grid)
+
+        for res in results:
+            res['dataset'] = dataset_name
+            res['dimension'] = dimension
+            res['train_size'] = train_size
+            res['test_size'] = test_size
 
         # Save results
         os.makedirs("results", exist_ok=True)
