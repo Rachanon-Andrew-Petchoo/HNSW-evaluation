@@ -85,20 +85,6 @@ def experiment(train_data, test_data, neighbors, params_grid):
                     })
     return results
 
-def plot_results(result_filepath, param_x, param_y, metric, save_to=None):
-    results = pd.read_csv(result_filepath)
-
-    plt.figure(figsize=(8,6))
-    scatter = plt.scatter(results[param_x], results[param_y], c=results[metric], cmap='viridis', s=50, edgecolors='k', alpha=0.7)
-    plt.colorbar(scatter, label=metric)
-    plt.xlabel(param_x)
-    plt.ylabel(param_y)
-    plt.title(f"{metric} for {param_x} vs. {param_y}")
-    if save_to:
-        plt.savefig(save_to, bbox_inches='tight')
-        print(f"[Plot] Saved to {save_to}")
-    plt.show()
-
 def run_full_evaluation():
     # Load dataset
     # TODO: Choose more dataset that have what Prof. suggests in the proposal feedback (size of dataset, dimensions)
@@ -149,7 +135,7 @@ def run_full_evaluation():
     # Load result + Plot some example trends
     # TODO: Plot more graphs (Might want to concat results between dataset before plotting)
     # TODO: Customize this function (potentially, showing metrics of adjusting more two parameters - like using 3D graph, or adding more dimensiosn using point size/color/etc.)
-    plot_results("results/sift-128_results.csv", "M", "efSearch", "recall")
+    
     
 if __name__ == "__main__":
     run_full_evaluation()
