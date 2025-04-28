@@ -5,8 +5,8 @@ import pandas as pd
 import os
 import time
 import psutil
-import matplotlib.pyplot as plt
 import requests
+import gc
 
 def download_data(urls):
     os.makedirs("data", exist_ok=True)
@@ -72,6 +72,10 @@ def experiment(train_data, test_data, neighbors, params_grid):
                     
                     index, build_time, mem_usage = build_hnsw_index(train_data, M, efC)
                     recall, avg_latency, throughput = evaluate_index(index, test_data, neighbors, efS)
+
+                    # Clear index after each evaluation
+                    del index
+                    gc.collect()
                     
                     results.append({
                         "M": M,
@@ -131,6 +135,10 @@ def run_full_evaluation():
         result_df = pd.DataFrame(results)
         result_df.to_csv(result_filepath, index=False)
         print(result_df)
+
+        # ---------- Clean up memory after each dataset ----------
+        del train, test, neighbors, results, result_df
+        gc.collect()
 
     # Load result + Plot some example trends
     # TODO: Plot more graphs (Might want to concat results between dataset before plotting)
