@@ -63,8 +63,10 @@ def evaluate_index(index, test_data, true_neighbors, efSearch, k=1):
 
     return recall, avg_latency, throughput
 
-def experiment(train_data, test_data, neighbors, params_grid):
-    results = []
+def experiment(dataset_name, train_data, test_data, neighbors, params_grid, result_filepath):
+    train_size, dimension = train_data.shape
+    test_size = test_data.shape[0]
+
     for M in params_grid['M']:
         for efC in params_grid['efConstruction']:
             for efS in params_grid['efSearch']:
@@ -73,11 +75,7 @@ def experiment(train_data, test_data, neighbors, params_grid):
                     index, build_time, mem_usage = build_hnsw_index(train_data, M, efC)
                     recall, avg_latency, throughput = evaluate_index(index, test_data, neighbors, efS)
 
-                    # Clear index after each evaluation
-                    del index
-                    gc.collect()
-                    
-                    results.append({
+                    result = {
                         "M": M,
                         "efConstruction": efC,
                         "efSearch": efS,
@@ -85,9 +83,18 @@ def experiment(train_data, test_data, neighbors, params_grid):
                         "avg_latency_ms": avg_latency * 1000,
                         "throughput_qps": throughput,
                         "build_time_s": build_time,
-                        "memory_mb": mem_usage
-                    })
-    return results
+                        "memory_mb": mem_usage,
+                        "dataset": dataset_name,
+                        "dimension": dimension,
+                        "train_size": train_size,
+                        "test_size": test_size
+                    }
+                    res_df = pd.DataFrame([result])
+                    res_df.to_csv(result_filepath, mode='a', header=False, index=False)
+
+                    # Clear memory after each evaluation
+                    del index, build_time, mem_usage, recall, avg_latency, throughput, result, res_df
+                    gc.collect()
 
 def run_full_evaluation():
     # Load dataset
@@ -113,37 +120,28 @@ def run_full_evaluation():
 
     for dataset_name in urls:
         print(f'[Experiment] Dataset: {dataset_name}')
+
+        # Split dataset
         train, test, neighbors = load_hdf5(f'data/{dataset_name}.hdf5')
-        
-        # Get metadata of each dataset
-        train_size, dimension = train.shape
-        test_size = test.shape[0]
 
-        # Run experiment
-        results = experiment(train, test, neighbors, params_grid)
-
-        for res in results:
-            res['dataset'] = dataset_name
-            res['dimension'] = dimension
-            res['train_size'] = train_size
-            res['test_size'] = test_size
-
-        # Save results
+        # Create CSV result file
         os.makedirs("results", exist_ok=True)
         result_filepath = f'results/{dataset_name}_results.csv'
 
-        result_df = pd.DataFrame(results)
-        result_df.to_csv(result_filepath, index=False)
-        print(result_df)
+        columns = ['M', 'efConstruction', 'efSearch', 'recall', 'avg_latency_ms', 'throughput_qps', 'build_time_s', 'memory_mb', 'dataset', 'dimension', 'train_size', 'test_size']
+        with open(result_filepath, 'w') as f:
+            f.write(','.join(columns) + '\n')
 
-        # ---------- Clean up memory after each dataset ----------
-        del train, test, neighbors, results, result_df
+        # Run experiment and save result to CSV
+        experiment(dataset_name, train, test, neighbors, params_grid, result_filepath)
+
+        # Clean up memory after each dataset
+        del train, test, neighbors, result_filepath, columns
         gc.collect()
-
-    # Load result + Plot some example trends
-    # TODO: Plot more graphs (Might want to concat results between dataset before plotting)
-    # TODO: Customize this function (potentially, showing metrics of adjusting more two parameters - like using 3D graph, or adding more dimensiosn using point size/color/etc.)
-    
     
 if __name__ == "__main__":
     run_full_evaluation()
+    # Load result + Plot some example trends
+    # TODO: Plot more graphs (Might want to concat results between dataset before plotting)
+    # TODO: Customize plot_utils.py functions (potentially, showing metrics of adjusting more two parameters - like using 3D graph, or adding more dimensiosn using point size/color/etc.)
+    
