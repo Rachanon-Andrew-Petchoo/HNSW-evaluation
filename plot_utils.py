@@ -101,30 +101,31 @@ def plot_3d_surface(result_filepaths, x_param, y_param, metric, save_dir=None):
 
 def plot_3rd_scatter_color(result_filepaths, x_param, y_param, z_param, metric, save_dir=None):
     """
-    Plots 3D scatter plot with color mapping for a 4th dimension (metric).
+    Plots a 3D scatter plot with color mapping for a 4th dimension (metric).
+    Averages metric values for duplicate (x, y, z) points.
     """
     fig = plt.figure(figsize=(8, 6))
     ax = fig.add_subplot(111, projection='3d')
 
     results_df = load_results(result_filepaths)
 
-    X = results_df[x_param].values
-    Y = results_df[y_param].values
-    Z = results_df[z_param].values
+    # Aggregate by x, y, z using mean for the metric.
+    aggregated = results_df.groupby([x_param, y_param, z_param])[metric].median().reset_index()
+    X = aggregated[x_param].values
+    Y = aggregated[y_param].values
+    Z = aggregated[z_param].values
+    M = aggregated[metric].values
 
-    M = results_df[metric].values
-
-    # Plot the surface.
-    scatter = ax.scatter(X, Y, Z, c=M, cmap='viridis', marker='x', s=50) 
+    scatter = ax.scatter(X, Y, Z, c=M, cmap='viridis', marker='x', s=50)
 
     ax.set_title(
-        f"4D Data Visualization: {x_param}, {y_param}, {z_param} → {metric} (color)")
+        f"{x_param}, {y_param}, {z_param} → median {metric} (color)")
     ax.set_xlabel(f"{x_param}")
     ax.set_ylabel(f"{y_param}")
     ax.set_zlabel(f"{z_param}")
 
     cbar = plt.colorbar(scatter, ax=ax, pad=0.1)
-    cbar.set_label(f"{metric}")
+    cbar.set_label(f"median {metric}")
 
     if save_dir:
         os.makedirs(save_dir, exist_ok=True)
@@ -199,3 +200,5 @@ if __name__ == "__main__":
                            z_param='M', metric='avg_latency_ms', save_dir="plots/combined")
     plot_3rd_scatter_color(result_filepaths, x_param='efSearch', y_param='efConstruction',
                            z_param='M', metric='recall', save_dir="plots/combined")
+    plot_3rd_scatter_color(result_filepaths, x_param='efSearch', y_param='efConstruction',
+                           z_param='M', metric='build_time_s', save_dir="plots/combined")
