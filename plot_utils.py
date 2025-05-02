@@ -78,14 +78,21 @@ def plot_scaling(result_filepaths, metric, save_dir=None):
 def plot_3d_surface(result_filepaths, x_param, y_param, metric, save_dir=None):
     results_df = load_results(result_filepaths)
 
-    X = results_df[x_param].values
-    Y = results_df[y_param].values
-    Z = results_df[metric].values
+    aggregated = (
+        results_df
+        .groupby([x_param, y_param])[metric]
+        .median()
+        .reset_index()
+    )
+    X = aggregated[x_param].values
+    Y = aggregated[y_param].values
+    Z = aggregated[metric].values
+
     grid_x, grid_y = np.mgrid[X.min():X.max():100j, Y.min():Y.max():100j]
     grid_z = griddata((X, Y), Z, (grid_x, grid_y), method='cubic')
 
     plt.figure(figsize=(14, 10))
-    contour = plt.contourf(grid_x, grid_y, grid_z, 20, cmap='plasma')
+    contour = plt.contourf(grid_x, grid_y, grid_z, 20, cmap='viridis')
     plt.colorbar(contour, label=metric)
     plt.xlabel(x_param)
     plt.ylabel(y_param)
@@ -99,6 +106,7 @@ def plot_3d_surface(result_filepaths, x_param, y_param, metric, save_dir=None):
         plt.savefig(save_path)
         print(f"[Plot] Saved to {save_path}")
 
+
 def plot_3rd_scatter_color(result_filepaths, x_param, y_param, z_param, metric, save_dir=None):
     """
     Plots a 3D scatter plot with color mapping for a 4th dimension (metric).
@@ -110,7 +118,8 @@ def plot_3rd_scatter_color(result_filepaths, x_param, y_param, z_param, metric, 
     results_df = load_results(result_filepaths)
 
     # Aggregate by x, y, z using mean for the metric.
-    aggregated = results_df.groupby([x_param, y_param, z_param])[metric].median().reset_index()
+    aggregated = results_df.groupby([x_param, y_param, z_param])[
+        metric].median().reset_index()
     X = aggregated[x_param].values
     Y = aggregated[y_param].values
     Z = aggregated[z_param].values
@@ -200,5 +209,3 @@ if __name__ == "__main__":
                            z_param='M', metric='avg_latency_ms', save_dir="plots/combined")
     plot_3rd_scatter_color(result_filepaths, x_param='efSearch', y_param='efConstruction',
                            z_param='M', metric='recall', save_dir="plots/combined")
-    plot_3rd_scatter_color(result_filepaths, x_param='efSearch', y_param='efConstruction',
-                           z_param='M', metric='build_time_s', save_dir="plots/combined")
