@@ -81,7 +81,7 @@ def plot_3d_surface(result_filepaths, x_param, y_param, metric, save_dir=None):
     aggregated = (
         results_df
         .groupby([x_param, y_param])[metric]
-        .median()
+        .mean()
         .reset_index()
     )
     X = aggregated[x_param].values
@@ -119,7 +119,7 @@ def plot_3rd_scatter_color(result_filepaths, x_param, y_param, z_param, metric, 
 
     # Aggregate by x, y, z using mean for the metric.
     aggregated = results_df.groupby([x_param, y_param, z_param])[
-        metric].median().reset_index()
+        metric].mean().reset_index()
     X = aggregated[x_param].values
     Y = aggregated[y_param].values
     Z = aggregated[z_param].values
@@ -204,6 +204,9 @@ if __name__ == "__main__":
                     metric='avg_latency_ms', save_dir="plots/combined")
     plot_3d_surface(result_filepaths, x_param='dimension', y_param='M',
                     metric='avg_latency_ms', save_dir="plots/combined")
+    
+    plot_3d_surface(result_filepaths, x_param='efConstruction', y_param='M',
+                    metric='throughput_qps', save_dir="plots/combined")
 
     plot_3rd_scatter_color(result_filepaths, x_param='efSearch', y_param='efConstruction',
                            z_param='M', metric='avg_latency_ms', save_dir="plots/combined")
